@@ -40,7 +40,7 @@ bool Amp12::Init(CommandList* pCommandList,  vector<Resource::uptr>& uploaders,
 			8192, false, m_source, uploaders.back().get(), &alphaMode), false);
 	}
 
-	// Create resources and pipelines
+	// Create resources
 	m_imageSize.x = m_source->GetWidth();
 	m_imageSize.y = dynamic_pointer_cast<Texture2D, ShaderResource>(m_source)->GetHeight();
 
