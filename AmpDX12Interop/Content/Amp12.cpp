@@ -7,21 +7,20 @@
 #include "Advanced/XUSGDDSLoader.h"
 #undef _INDEPENDENT_DDS_LOADER_
 
-using namespace concurrency;
-using namespace concurrency::direct3d;
-using namespace concurrency::graphics;
-using namespace concurrency::graphics::direct3d;
 using namespace std;
+using namespace Concurrency;
+using namespace Concurrency::direct3d;
+using namespace Concurrency::graphics;
+using namespace Concurrency::graphics::direct3d;
 using namespace DirectX;
 using namespace XUSG;
 
-Amp12::Amp12(const Device::sptr& device, const accelerator_view& acceleratorView,
-	const com_ptr<ID3D11On12Device>& device11On12) :
+Amp12::Amp12(const accelerator_view& acceleratorView, const Device::sptr& device) :
 	m_acceleratorView(acceleratorView),
 	m_device(device),
-	m_device11On12(device11On12),
 	m_imageSize(1, 1)
 {
+	get_device(acceleratorView)->QueryInterface<ID3D11On12Device>(&m_device11On12);
 }
 
 Amp12::~Amp12()

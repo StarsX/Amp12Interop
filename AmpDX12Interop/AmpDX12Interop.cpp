@@ -11,9 +11,8 @@
 
 #include "AmpDX12Interop.h"
 
-using namespace concurrency;
-using namespace concurrency::direct3d;
 using namespace std;
+using namespace Concurrency::direct3d;
 using namespace XUSG;
 
 AmpDX12Interop::AmpDX12Interop(uint32_t width, uint32_t height, wstring name) :
@@ -125,13 +124,10 @@ void AmpDX12Interop::LoadPipeline(vector<Resource::uptr>& uploaders)
 		nullptr
 	));
 
-	// Query the 11On12 device from the 11 device.
-	ThrowIfFailed(d3d11Device.As(&m_device11On12));
-
 	// Create AMP accelerator view
-	const auto ampAcceleratorView = create_accelerator_view(m_device11On12.get());
+	const auto ampAcceleratorView = create_accelerator_view(d3d11Device.get());
 
-	m_amp12 = make_unique<Amp12>(m_device, ampAcceleratorView, m_device11On12);
+	m_amp12 = make_unique<Amp12>(ampAcceleratorView, m_device);
 	if (!m_amp12) ThrowIfFailed(E_FAIL);
 
 	if (!m_amp12->Init(pCommandList, uploaders, Format::B8G8R8A8_UNORM, m_fileName.c_str()))

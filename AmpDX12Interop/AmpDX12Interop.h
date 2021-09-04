@@ -48,8 +48,6 @@ private:
 	XUSG::RenderTarget::uptr		m_renderTargets[FrameCount];
 	XUSG::CommandList::uptr			m_commandList;
 
-	XUSG::com_ptr<ID3D11On12Device>	m_device11On12;
-
 	// App resources.
 	std::unique_ptr<Amp12> m_amp12;
 
