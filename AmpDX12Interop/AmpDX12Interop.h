@@ -45,8 +45,8 @@ private:
 	XUSG::CommandQueue::uptr		m_commandQueue;
 
 	XUSG::Device::sptr				m_device;
-	XUSG::RenderTarget::uptr	m_renderTargets[FrameCount];
-	XUSG::CommandList::uptr		m_commandList;
+	XUSG::RenderTarget::uptr		m_renderTargets[FrameCount];
+	XUSG::CommandList::uptr			m_commandList;
 
 	XUSG::com_ptr<ID3D11On12Device>	m_device11On12;
 
