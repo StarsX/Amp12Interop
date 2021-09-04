@@ -17,7 +17,7 @@ public:
 	bool Init(XUSG::CommandList* pCommandList, std::vector<XUSG::Resource::uptr>& uploaders,
 		XUSG::Format rtFormat, const wchar_t* fileName);
 
-	void Process(const XUSG::CommandList* pCommandList);
+	void Process();
 
 	void GetImageSize(uint32_t& width, uint32_t& height) const;
 

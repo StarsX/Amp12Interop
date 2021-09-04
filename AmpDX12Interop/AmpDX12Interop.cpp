@@ -279,7 +279,7 @@ void AmpDX12Interop::PopulateCommandList()
 	N_RETURN(pCommandList->Reset(pCommandAllocator, nullptr), ThrowIfFailed(E_FAIL));
 
 	// Record commands.
-	m_amp12->Process(pCommandList);
+	m_amp12->Process();
 
 	ResourceBarrier barrier;
 	auto numBarriers = m_renderTargets[m_frameIndex]->SetBarrier(&barrier, ResourceState::COPY_DEST);

@@ -76,7 +76,7 @@ bool Amp12::Init(CommandList* pCommandList,  vector<Resource::uptr>& uploaders,
 	return true;
 }
 
-void Amp12::Process(const CommandList* pCommandList)
+void Amp12::Process()
 {
 	ID3D11Resource* const pResources11[] = { m_source11.get(), m_result11.get() };
 	m_device11On12->AcquireWrappedResources(pResources11, static_cast<uint32_t>(size(pResources11)));
