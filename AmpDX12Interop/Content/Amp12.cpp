@@ -20,11 +20,14 @@ Amp12::Amp12(const accelerator_view& acceleratorView, const Device::sptr& device
 	m_device(device),
 	m_imageSize(1, 1)
 {
-	get_device(acceleratorView)->QueryInterface<ID3D11On12Device>(&m_device11On12);
+	const auto pDevice = get_device(acceleratorView);
+	pDevice->QueryInterface<ID3D11On12Device>(&m_device11On12);
+	SAFE_RELEASE(pDevice);
 }
 
 Amp12::~Amp12()
 {
+	amp_uninitialize();
 }
 
 bool Amp12::Init(CommandList* pCommandList,  vector<Resource::uptr>& uploaders,
@@ -51,7 +54,7 @@ bool Amp12::Init(CommandList* pCommandList,  vector<Resource::uptr>& uploaders,
 
 	// Wrap DX11 resources
 	D3D11_RESOURCE_FLAGS dx11ResourceFlags = { D3D11_BIND_SHADER_RESOURCE };
-	//dx11ResourceFlags.MiscFlags = D3D11_RESOURCE_MISC_RESTRICT_SHARED_RESOURCE;
+	//dx11ResourceFlags.MiscFlags = D3D11_RESOURCE_MISC_SHARED;
 	if (FAILED(m_device11On12->CreateWrappedResource(reinterpret_cast<IUnknown*>(m_source->GetHandle()),
 		&dx11ResourceFlags, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
 		D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, IID_PPV_ARGS(&m_source11))))
