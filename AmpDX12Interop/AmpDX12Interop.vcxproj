@@ -180,6 +180,7 @@ COPY /Y "$(ProjectDir)XUSG\Bin\$(Platform)\$(Configuration)\*.dll" "$(ProjectDir
     <ClInclude Include="Common\Win32Application.h" />
     <ClInclude Include="Content\Amp12.h" />
     <ClInclude Include="AmpDX12Interop.h" />
+    <ClInclude Include="Content\AmpVecMath.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="XUSG\Advanced\XUSGDDSLoader.h" />
     <ClInclude Include="XUSG\Core\XUSG.h" />

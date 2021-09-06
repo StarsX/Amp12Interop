@@ -3,6 +3,7 @@
 //--------------------------------------------------------------------------------------
 
 #include "Amp12.h"
+#include "AmpVecMath.h"
 #define _INDEPENDENT_DDS_LOADER_
 #include "Advanced/XUSGDDSLoader.h"
 #undef _INDEPENDENT_DDS_LOADER_
@@ -67,8 +68,8 @@ bool Amp12::Init(CommandList* pCommandList,  vector<Resource::uptr>& uploaders,
 		return false;
 
 	// Wrap AMP resources
-	m_sourceAMP = make_unique<texture<unorm_4, 2>>(make_texture<unorm_4, 2>(m_acceleratorView, m_source11.get()));
-	m_resultAMP = make_unique<texture<unorm_4, 2>>(make_texture<unorm_4, 2>(m_acceleratorView, m_result11.get()));
+	m_sourceAMP = make_unique<texture<unorm4, 2>>(make_texture<unorm4, 2>(m_acceleratorView, m_source11.get()));
+	m_resultAMP = make_unique<texture<unorm4, 2>>(make_texture<unorm4, 2>(m_acceleratorView, m_result11.get()));
 
 	ResourceBarrier barrier;
 	m_result->SetBarrier(&barrier, ResourceState::COPY_SOURCE);
@@ -81,19 +82,19 @@ void Amp12::Process()
 	ID3D11Resource* const pResources11[] = { m_source11.get(), m_result11.get() };
 	m_device11On12->AcquireWrappedResources(pResources11, static_cast<uint32_t>(size(pResources11)));
 
-	const auto source = texture_view<const unorm_4, 2>(*m_sourceAMP);
-	const auto result = texture_view<unorm_4, 2>(*m_resultAMP);
+	const auto source = texture_view<const unorm4, 2>(*m_sourceAMP);
+	const auto result = texture_view<unorm4, 2>(*m_resultAMP);
 
 	parallel_for_each(
 		// Define the compute domain, which is the set of threads that are created.
 		result.extent,
 		// Define the code to run on each thread on the accelerator.
-		[=](const index<2> idx) restrict(amp)
+		[=](const index<2>& idx) restrict(amp)
 		{
 			const auto src = source[idx];
-			const auto dst = src.x * 0.299f + src.y * 0.587f + src.z * 0.114f;
+			const auto dst = dot(src.xyz, unorm3(0.299f, 0.587f, 0.114f));
 
-			result.set(idx, unorm_4(dst, dst, dst, src.w));
+			result.set(idx, unorm4(dst, dst, dst, src.w));
 		}
 	);
 

@@ -69,6 +69,9 @@
     <ClInclude Include="XUSG\Core\XUSG.h">
       <Filter>XUSG\Core</Filter>
     </ClInclude>
+    <ClInclude Include="Content\AmpVecMath.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Common\DXFramework.cpp">
