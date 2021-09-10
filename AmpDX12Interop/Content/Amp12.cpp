@@ -91,7 +91,11 @@ void Amp12::Process()
 		// Define the code to run on each thread on the accelerator.
 		[=](const index<2>& idx) restrict(amp)
 		{
-			const auto src = source[idx];
+			const uint2 xy(idx[1], idx[0]);
+			const uint2 imageSize(result.extent[1], result.extent[0]);
+			const auto uv = (float2(xy) + 0.5f) / float2(imageSize);
+
+			const auto src = source.sample(uv, 0.0f);
 			const auto dst = dot(src.xyz, unorm3(0.299f, 0.587f, 0.114f));
 
 			result.set(idx, unorm4(dst, dst, dst, src.w));
