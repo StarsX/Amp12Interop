@@ -27,6 +27,7 @@ AmpDX12Interop::AmpDX12Interop(uint32_t width, uint32_t height, wstring name) :
 	FILE* stream;
 	freopen_s(&stream, "CONOUT$", "w+t", stdout);
 	freopen_s(&stream, "CONIN$", "r+t", stdin);
+	freopen_s(&stream, "CONOUT$", "w+t", stderr);
 #endif
 }
 
@@ -149,7 +150,7 @@ void AmpDX12Interop::LoadPipeline(vector<Resource::uptr>& uploaders)
 
 	// Describe and create the swap chain.
 	m_swapChain = SwapChain::MakeUnique();
-	N_RETURN(m_swapChain->Create(factory.Get(), Win32Application::GetHwnd(), m_commandQueue.get(),
+	N_RETURN(m_swapChain->Create(factory.get(), Win32Application::GetHwnd(), m_commandQueue.get(),
 		FrameCount, m_width, m_height, Format::B8G8R8A8_UNORM), ThrowIfFailed(E_FAIL));
 
 	m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();

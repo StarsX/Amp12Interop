@@ -41,7 +41,8 @@ bool Amp12::Init(CommandList* pCommandList,  vector<Resource::uptr>& uploaders,
 
 		uploaders.emplace_back(Resource::MakeUnique());
 		N_RETURN(textureLoader.CreateTextureFromFile(m_device.get(), pCommandList, fileName,
-			8192, false, m_source, uploaders.back().get(), &alphaMode), false);
+			8192, false, m_source, uploaders.back().get(), &alphaMode, ResourceState::COMMON,
+			MemoryFlag::SHARED), false);
 	}
 
 	// Create resources
@@ -51,17 +52,17 @@ bool Amp12::Init(CommandList* pCommandList,  vector<Resource::uptr>& uploaders,
 	m_result = Texture2D::MakeUnique();
 	N_RETURN(m_result->Create(m_device.get(), m_imageSize.x, m_imageSize.y, rtFormat, 1,
 		ResourceFlag::ALLOW_UNORDERED_ACCESS | ResourceFlag::ALLOW_SIMULTANEOUS_ACCESS,
-		1, 1, MemoryType::DEFAULT, false, L"Result"), false);
+		1, 1, false, MemoryFlag::SHARED, L"Result"), false);
 
 	// Wrap DX11 resources
 	D3D11_RESOURCE_FLAGS dx11ResourceFlags = { D3D11_BIND_SHADER_RESOURCE };
-	//dx11ResourceFlags.MiscFlags = D3D11_RESOURCE_MISC_SHARED;
+	dx11ResourceFlags.MiscFlags = D3D11_RESOURCE_MISC_SHARED;
 	if (FAILED(m_device11On12->CreateWrappedResource(reinterpret_cast<IUnknown*>(m_source->GetHandle()),
 		&dx11ResourceFlags, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
 		D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, IID_PPV_ARGS(&m_source11))))
 		return false;
 
-	dx11ResourceFlags.BindFlags = D3D11_BIND_UNORDERED_ACCESS;
+	dx11ResourceFlags.BindFlags |= D3D11_BIND_UNORDERED_ACCESS;
 	if (FAILED(m_device11On12->CreateWrappedResource(reinterpret_cast<IUnknown*>(m_result->GetHandle()),
 		&dx11ResourceFlags, D3D12_RESOURCE_STATE_COPY_SOURCE,
 		D3D12_RESOURCE_STATE_COPY_SOURCE, IID_PPV_ARGS(&m_result11))))
