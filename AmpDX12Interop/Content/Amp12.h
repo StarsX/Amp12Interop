@@ -26,12 +26,12 @@ protected:
 	Concurrency::accelerator_view m_acceleratorView;
 	XUSG::Device::sptr m_device;
 
-	XUSG::ShaderResource::sptr			m_source;
-	XUSG::Texture2D::uptr				m_result;
+	XUSG::Texture::sptr				m_source;
+	XUSG::Texture2D::uptr			m_result;
 
-	XUSG::com_ptr<ID3D11On12Device>		m_device11On12;
-	XUSG::com_ptr<ID3D11Texture2D>		m_source11;
-	XUSG::com_ptr<ID3D11Texture2D>		m_result11;
+	XUSG::com_ptr<ID3D11On12Device>	m_device11On12;
+	XUSG::com_ptr<ID3D11Texture2D>	m_source11;
+	XUSG::com_ptr<ID3D11Texture2D>	m_result11;
 
 	std::unique_ptr<Concurrency::graphics::texture<Concurrency::graphics::unorm_4, 2>> m_sourceAMP;
 	std::unique_ptr<Concurrency::graphics::texture<Concurrency::graphics::unorm_4, 2>> m_resultAMP;
