@@ -46,8 +46,8 @@ bool Amp12::Init(CommandList* pCommandList,  vector<Resource::uptr>& uploaders,
 	}
 
 	// Create resources
-	m_imageSize.x = m_source->GetWidth();
-	m_imageSize.y = dynamic_pointer_cast<Texture2D, ShaderResource>(m_source)->GetHeight();
+	m_imageSize.x = static_cast<uint32_t>(m_source->GetWidth());
+	m_imageSize.y = m_source->GetHeight();
 
 	m_result = Texture2D::MakeUnique();
 	N_RETURN(m_result->Create(m_device.get(), m_imageSize.x, m_imageSize.y, rtFormat, 1,
