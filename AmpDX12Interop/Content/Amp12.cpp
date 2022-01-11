@@ -68,7 +68,8 @@ bool Amp12::Init(CommandList* pCommandList,  vector<Resource::uptr>& uploaders,
 		CD3D11_TEXTURE2D_DESC texDesc(static_cast<DXGI_FORMAT>(source->GetFormat()), m_imageSize.x, m_imageSize.y,
 			1, 1, D3D11_BIND_SHADER_RESOURCE, D3D11_USAGE_DEFAULT, 0, 1);
 		texDesc.MiscFlags = D3D11_RESOURCE_MISC_SHARED | D3D11_RESOURCE_MISC_SHARED_NTHANDLE;
-		m_device11->CreateTexture2D(&texDesc, nullptr, &m_source11);
+		M_RETURN(FAILED(m_device11->CreateTexture2D(&texDesc, nullptr, &m_source11)),
+			cerr, "Failed to create DX11 resource.", false);
 
 		// Share the DX11 resource to DX12
 		{
