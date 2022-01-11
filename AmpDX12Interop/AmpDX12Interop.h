@@ -64,8 +64,9 @@ private:
 
 	// User external settings
 	std::wstring m_fileName;
+	bool m_useNativeDX11;
 
-	void LoadPipeline(std::vector<XUSG::Resource::uptr>& uploaders);
+	void LoadPipeline(std::vector<XUSG::Resource::uptr>& uploaders, XUSG::Texture::sptr& srcForNative11);
 	void LoadAssets();
 
 	void PopulateCommandList();

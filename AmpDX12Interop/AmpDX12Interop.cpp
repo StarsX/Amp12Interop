@@ -19,7 +19,8 @@ AmpDX12Interop::AmpDX12Interop(uint32_t width, uint32_t height, wstring name) :
 	DXFramework(width, height, name),
 	m_frameIndex(0),
 	m_showFPS(true),
-	m_fileName(L"Assets/Sashimi.dds")
+	m_fileName(L"Assets/Sashimi.dds"),
+	m_useNativeDX11(false)
 {
 #if defined (_DEBUG)
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
@@ -41,12 +42,13 @@ AmpDX12Interop::~AmpDX12Interop()
 void AmpDX12Interop::OnInit()
 {
 	vector<Resource::uptr> uploaders(0);
-	LoadPipeline(uploaders);
+	Texture::sptr srcForNative11;
+	LoadPipeline(uploaders, srcForNative11);
 	LoadAssets();
 }
 
 // Load the rendering pipeline dependencies.
-void AmpDX12Interop::LoadPipeline(vector<Resource::uptr>& uploaders)
+void AmpDX12Interop::LoadPipeline(vector<Resource::uptr>& uploaders, Texture::sptr& srcForNative11)
 {
 	auto dxgiFactoryFlags = 0u;
 
@@ -110,28 +112,23 @@ void AmpDX12Interop::LoadPipeline(vector<Resource::uptr>& uploaders)
 
 	// Create DX11on12 device
 	const auto pCommandQueue = reinterpret_cast<ID3D12CommandQueue*>(m_commandQueue->GetHandle());
-	uint32_t d3d11DeviceFlags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
-	com_ptr<ID3D11Device> d3d11Device;
-	ThrowIfFailed(D3D11On12CreateDevice(
-		static_cast<ID3D12Device*>(m_device->GetHandle()),
-		d3d11DeviceFlags,
-		nullptr,
-		0,
-		reinterpret_cast<IUnknown* const*>(&pCommandQueue),
-		1,
-		0,
-		&d3d11Device,
-		nullptr,
-		nullptr
-	));
+	const uint32_t d3d11DeviceFlags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
+	com_ptr<ID3D11Device> device11;
+	if (m_useNativeDX11)
+		ThrowIfFailed(D3D11CreateDevice(dxgiAdapter.get(), D3D_DRIVER_TYPE_UNKNOWN, nullptr,
+			d3d11DeviceFlags, nullptr, 0, D3D11_SDK_VERSION, &device11, nullptr, nullptr));
+	else ThrowIfFailed(D3D11On12CreateDevice(static_cast<ID3D12Device*>(m_device->GetHandle()),
+			d3d11DeviceFlags, nullptr, 0, reinterpret_cast<IUnknown* const*>(&pCommandQueue),
+			1, 0, &device11, nullptr, nullptr));
 
 	// Create AMP accelerator view
-	const auto ampAcceleratorView = create_accelerator_view(d3d11Device.get());
+	const auto ampAcceleratorView = create_accelerator_view(device11.get());
 
 	m_amp12 = make_unique<Amp12>(ampAcceleratorView, m_device);
 	if (!m_amp12) ThrowIfFailed(E_FAIL);
 
-	if (!m_amp12->Init(pCommandList, uploaders, Format::B8G8R8A8_UNORM, m_fileName.c_str()))
+	if (!m_amp12->Init(pCommandList, uploaders, Format::R8G8B8A8_UNORM,
+		m_fileName.c_str(), m_useNativeDX11 ? &srcForNative11 : nullptr))
 		ThrowIfFailed(E_FAIL);
 	
 	m_amp12->GetImageSize(m_width, m_height);
@@ -151,7 +148,7 @@ void AmpDX12Interop::LoadPipeline(vector<Resource::uptr>& uploaders)
 	// Describe and create the swap chain.
 	m_swapChain = SwapChain::MakeUnique();
 	N_RETURN(m_swapChain->Create(factory.get(), Win32Application::GetHwnd(), m_commandQueue.get(),
-		FrameCount, m_width, m_height, Format::B8G8R8A8_UNORM), ThrowIfFailed(E_FAIL));
+		FrameCount, m_width, m_height, Format::R8G8B8A8_UNORM), ThrowIfFailed(E_FAIL));
 
 	m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
 
@@ -167,8 +164,6 @@ void AmpDX12Interop::LoadPipeline(vector<Resource::uptr>& uploaders)
 // Load the sample assets.
 void AmpDX12Interop::LoadAssets()
 {
-	//array_view = 
-
 	// Close the command list and execute it to begin the initial GPU setup.
 	N_RETURN(m_commandList->Close(), ThrowIfFailed(E_FAIL));
 	m_commandQueue->ExecuteCommandList(m_commandList.get());
@@ -213,6 +208,7 @@ void AmpDX12Interop::OnRender()
 	PopulateCommandList();
 
 	// Execute the command list.
+	m_amp12->Process();
 	m_commandQueue->ExecuteCommandList(m_commandList.get());
 
 	// Present the frame.
@@ -254,9 +250,18 @@ void AmpDX12Interop::ParseCommandLineArgs(wchar_t* argv[], int argc)
 	for (auto i = 1; i < argc; ++i)
 	{
 		if (_wcsnicmp(argv[i], L"-image", wcslen(argv[i])) == 0 ||
-			_wcsnicmp(argv[i], L"/image", wcslen(argv[i])) == 0)
+			_wcsnicmp(argv[i], L"/image", wcslen(argv[i])) == 0 ||
+			_wcsnicmp(argv[i], L"-i", wcslen(argv[i])) == 0 ||
+			_wcsnicmp(argv[i], L"/i", wcslen(argv[i])) == 0)
 		{
 			if (i + 1 < argc) m_fileName = argv[i + 1];
+		}
+		else if(_wcsnicmp(argv[i], L"-native", wcslen(argv[i])) == 0 ||
+			_wcsnicmp(argv[i], L"/native", wcslen(argv[i])) == 0 ||
+			_wcsnicmp(argv[i], L"-n", wcslen(argv[i])) == 0 ||
+			_wcsnicmp(argv[i], L"/n", wcslen(argv[i])) == 0)
+		{
+			m_useNativeDX11 = true;
 		}
 	}
 }
@@ -276,8 +281,6 @@ void AmpDX12Interop::PopulateCommandList()
 	N_RETURN(pCommandList->Reset(pCommandAllocator, nullptr), ThrowIfFailed(E_FAIL));
 
 	// Record commands.
-	m_amp12->Process();
-
 	ResourceBarrier barrier;
 	auto numBarriers = m_renderTargets[m_frameIndex]->SetBarrier(&barrier, ResourceState::COPY_DEST);
 	pCommandList->Barrier(numBarriers, &barrier);

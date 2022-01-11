@@ -14,7 +14,7 @@ public:
 	virtual ~Amp12();
 
 	bool Init(XUSG::CommandList* pCommandList, std::vector<XUSG::Resource::uptr>& uploaders,
-		XUSG::Format rtFormat, const wchar_t* fileName);
+		XUSG::Format rtFormat, const wchar_t* fileName, XUSG::Texture::sptr* pSrcForNative11);
 
 	void Process();
 
@@ -29,12 +29,14 @@ protected:
 	XUSG::Texture::sptr				m_source;
 	XUSG::Texture2D::uptr			m_result;
 
-	XUSG::com_ptr<ID3D11On12Device>	m_device11On12;
+	XUSG::com_ptr<ID3D11Device1>	m_device11;
 	XUSG::com_ptr<ID3D11Texture2D>	m_source11;
 	XUSG::com_ptr<ID3D11Texture2D>	m_result11;
 
 	std::unique_ptr<Concurrency::graphics::texture<Concurrency::graphics::unorm_4, 2>> m_sourceAMP;
 	std::unique_ptr<Concurrency::graphics::texture<Concurrency::graphics::unorm_4, 2>> m_resultAMP;
 
-	DirectX::XMUINT2					m_imageSize;
+	DirectX::XMUINT2				m_imageSize;
+
+	bool							m_useNativeDX11;
 };

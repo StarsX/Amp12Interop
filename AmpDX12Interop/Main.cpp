@@ -14,7 +14,7 @@
 _Use_decl_annotations_
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
 {
-	AmpDX12Interop ampDX12Interop(1024, 1024, L"C++ and DirectX 12 Interop");
+	AmpDX12Interop ampDX12Interop(1024, 1024, L"C++ AMP and DirectX 12 Interop");
 
 	return Win32Application::Run(&ampDX12Interop, hInstance, nCmdShow);
 }
