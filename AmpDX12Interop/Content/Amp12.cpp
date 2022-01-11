@@ -75,9 +75,9 @@ bool Amp12::Init(CommandList* pCommandList,  vector<Resource::uptr>& uploaders,
 		{
 			// Create a DX11 shared resource handle
 			HANDLE hResource;
-			com_ptr<IDXGIResource1> pResourceDXGI;
-			M_RETURN(FAILED(m_source11.As(&pResourceDXGI)), cerr, "Failed to query DXGI resource.", false);
-			M_RETURN(FAILED(pResourceDXGI->CreateSharedHandle(nullptr, DXGI_SHARED_RESOURCE_READ |
+			com_ptr<IDXGIResource1> resourceDXGI;
+			M_RETURN(FAILED(m_source11.As(&resourceDXGI)), cerr, "Failed to query DXGI resource.", false);
+			M_RETURN(FAILED(resourceDXGI->CreateSharedHandle(nullptr, DXGI_SHARED_RESOURCE_READ |
 				DXGI_SHARED_RESOURCE_WRITE, nullptr, &hResource)), cerr, "Failed to share Source.", false);
 
 			// Open the resource handle on DX12
