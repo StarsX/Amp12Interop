@@ -79,7 +79,7 @@ void AmpDX12Interop::LoadPipeline(vector<Resource::uptr>& uploaders, Texture::sp
 		dxgiAdapter = nullptr;
 		ThrowIfFailed(factory->EnumAdapters1(i, &dxgiAdapter));
 
-		m_device = Device::MakeShared();
+		m_device = Device::MakeUnique();
 		hr = m_device->Create(dxgiAdapter.get(), D3D_FEATURE_LEVEL_11_0);
 	}
 
@@ -124,7 +124,7 @@ void AmpDX12Interop::LoadPipeline(vector<Resource::uptr>& uploaders, Texture::sp
 	// Create AMP accelerator view
 	const auto ampAcceleratorView = create_accelerator_view(device11.get());
 
-	m_amp12 = make_unique<Amp12>(ampAcceleratorView, m_device);
+	m_amp12 = make_unique<Amp12>(ampAcceleratorView);
 	if (!m_amp12) ThrowIfFailed(E_FAIL);
 
 	if (!m_amp12->Init(pCommandList, uploaders, Format::R8G8B8A8_UNORM,

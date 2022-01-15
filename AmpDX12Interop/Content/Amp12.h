@@ -10,7 +10,7 @@
 class Amp12
 {
 public:
-	Amp12(const Concurrency::accelerator_view& acceleratorView, const XUSG::Device::sptr& device);
+	Amp12(const Concurrency::accelerator_view& acceleratorView);
 	virtual ~Amp12();
 
 	bool Init(XUSG::CommandList* pCommandList, std::vector<XUSG::Resource::uptr>& uploaders,
@@ -24,7 +24,6 @@ public:
 
 protected:
 	Concurrency::accelerator_view m_acceleratorView;
-	XUSG::Device::sptr m_device;
 
 	XUSG::Texture::sptr				m_source;
 	XUSG::Texture2D::uptr			m_result;

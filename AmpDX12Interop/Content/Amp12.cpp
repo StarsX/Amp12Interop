@@ -16,9 +16,8 @@ using namespace Concurrency::graphics::direct3d;
 using namespace DirectX;
 using namespace XUSG;
 
-Amp12::Amp12(const accelerator_view& acceleratorView, const Device::sptr& device) :
+Amp12::Amp12(const accelerator_view& acceleratorView) :
 	m_acceleratorView(acceleratorView),
-	m_device(device),
 	m_imageSize(1, 1)
 {
 	const auto pDevice = get_device(acceleratorView);
@@ -34,6 +33,7 @@ Amp12::~Amp12()
 bool Amp12::Init(CommandList* pCommandList,  vector<Resource::uptr>& uploaders,
 	Format rtFormat, const wchar_t* fileName, Texture::sptr* pSrcForNative11)
 {
+	const auto pDevice = pCommandList->GetDevice();
 	m_useNativeDX11 = pSrcForNative11 ? true : false;
 	auto& source = pSrcForNative11 ? *pSrcForNative11 : m_source;
 
@@ -43,8 +43,8 @@ bool Amp12::Init(CommandList* pCommandList,  vector<Resource::uptr>& uploaders,
 		DDS::AlphaMode alphaMode;
 
 		uploaders.emplace_back(Resource::MakeUnique());
-		N_RETURN(textureLoader.CreateTextureFromFile(m_device.get(), pCommandList, fileName,
-			8192, false, source, uploaders.back().get(), &alphaMode, ResourceState::COMMON,
+		N_RETURN(textureLoader.CreateTextureFromFile(pCommandList, fileName, 8192,
+			false, source, uploaders.back().get(), &alphaMode, ResourceState::COMMON,
 			MemoryFlag::SHARED), false);
 	}
 
@@ -55,13 +55,13 @@ bool Amp12::Init(CommandList* pCommandList,  vector<Resource::uptr>& uploaders,
 	auto resourceFlags = ResourceFlag::ALLOW_UNORDERED_ACCESS | ResourceFlag::ALLOW_SIMULTANEOUS_ACCESS;
 	resourceFlags |= m_useNativeDX11 ? ResourceFlag::ALLOW_RENDER_TARGET : ResourceFlag::NONE;
 	m_result = Texture2D::MakeUnique();
-	N_RETURN(m_result->Create(m_device.get(), m_imageSize.x, m_imageSize.y, rtFormat, 1,
+	N_RETURN(m_result->Create(pDevice, m_imageSize.x, m_imageSize.y, rtFormat, 1,
 		resourceFlags, 1, 1, false, MemoryFlag::SHARED, L"Result"), false);
 
 	// Wrap DX11 resources
 	if (m_useNativeDX11)
 	{
-		const auto pDevice12 = static_cast<ID3D12Device*>(m_device->GetHandle());
+		const auto pDevice12 = static_cast<ID3D12Device*>(pDevice->GetHandle());
 
 		// DX12 resource shared to native DX11 only supports resources with ALLOW_RENDER_TARGET
 		// So, we create a DX11 resource shared to DX12, and then copy the source data to it
