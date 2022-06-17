@@ -43,7 +43,7 @@ bool Amp12::Init(CommandList* pCommandList,  vector<Resource::uptr>& uploaders,
 		DDS::AlphaMode alphaMode;
 
 		uploaders.emplace_back(Resource::MakeUnique());
-		N_RETURN(textureLoader.CreateTextureFromFile(pCommandList, fileName, 8192,
+		XUSG_N_RETURN(textureLoader.CreateTextureFromFile(pCommandList, fileName, 8192,
 			false, source, uploaders.back().get(), &alphaMode, ResourceState::COMMON,
 			MemoryFlag::SHARED), false);
 	}
@@ -55,7 +55,7 @@ bool Amp12::Init(CommandList* pCommandList,  vector<Resource::uptr>& uploaders,
 	auto resourceFlags = ResourceFlag::ALLOW_UNORDERED_ACCESS | ResourceFlag::ALLOW_SIMULTANEOUS_ACCESS;
 	resourceFlags |= m_useNativeDX11 ? ResourceFlag::ALLOW_RENDER_TARGET : ResourceFlag::NONE;
 	m_result = Texture2D::MakeUnique();
-	N_RETURN(m_result->Create(pDevice, m_imageSize.x, m_imageSize.y, rtFormat, 1,
+	XUSG_N_RETURN(m_result->Create(pDevice, m_imageSize.x, m_imageSize.y, rtFormat, 1,
 		resourceFlags, 1, 1, false, MemoryFlag::SHARED, L"Result"), false);
 
 	// Wrap DX11 resources
@@ -68,7 +68,7 @@ bool Amp12::Init(CommandList* pCommandList,  vector<Resource::uptr>& uploaders,
 		CD3D11_TEXTURE2D_DESC texDesc(static_cast<DXGI_FORMAT>(source->GetFormat()), m_imageSize.x, m_imageSize.y,
 			1, 1, D3D11_BIND_SHADER_RESOURCE, D3D11_USAGE_DEFAULT, 0, 1);
 		texDesc.MiscFlags = D3D11_RESOURCE_MISC_SHARED | D3D11_RESOURCE_MISC_SHARED_NTHANDLE;
-		M_RETURN(FAILED(m_device11->CreateTexture2D(&texDesc, nullptr, &m_source11)),
+		XUSG_M_RETURN(FAILED(m_device11->CreateTexture2D(&texDesc, nullptr, &m_source11)),
 			cerr, "Failed to create DX11 resource.", false);
 
 		// Share the DX11 resource to DX12
@@ -76,13 +76,13 @@ bool Amp12::Init(CommandList* pCommandList,  vector<Resource::uptr>& uploaders,
 			// Create a DX11 shared resource handle
 			HANDLE hResource;
 			com_ptr<IDXGIResource1> resourceDXGI;
-			M_RETURN(FAILED(m_source11.As(&resourceDXGI)), cerr, "Failed to query DXGI resource.", false);
-			M_RETURN(FAILED(resourceDXGI->CreateSharedHandle(nullptr, DXGI_SHARED_RESOURCE_READ |
+			XUSG_M_RETURN(FAILED(m_source11.As(&resourceDXGI)), cerr, "Failed to query DXGI resource.", false);
+			XUSG_M_RETURN(FAILED(resourceDXGI->CreateSharedHandle(nullptr, DXGI_SHARED_RESOURCE_READ |
 				DXGI_SHARED_RESOURCE_WRITE, nullptr, &hResource)), cerr, "Failed to share Source.", false);
 
 			// Open the resource handle on DX12
 			com_ptr<ID3D12Resource> resource12;
-			M_RETURN(FAILED(pDevice12->OpenSharedHandle(hResource, IID_PPV_ARGS(&resource12))),
+			XUSG_M_RETURN(FAILED(pDevice12->OpenSharedHandle(hResource, IID_PPV_ARGS(&resource12))),
 				cerr, "Failed to open shared Source on DX12.", false);
 			m_source = Texture::MakeShared();
 			static_pointer_cast<Resource, Texture>(m_source)->Create(pDevice12, resource12.get());
@@ -92,11 +92,11 @@ bool Amp12::Init(CommandList* pCommandList,  vector<Resource::uptr>& uploaders,
 		{
 			// Create a DX12 shared resource handle
 			HANDLE hResource;
-			M_RETURN(FAILED(pDevice12->CreateSharedHandle(static_cast<ID3D12Resource*>(m_result->GetHandle()),
+			XUSG_M_RETURN(FAILED(pDevice12->CreateSharedHandle(static_cast<ID3D12Resource*>(m_result->GetHandle()),
 				nullptr, GENERIC_ALL, nullptr, &hResource)), cerr, "Failed to share Result.", false);
 
 			// Open the resource handle on DX11
-			M_RETURN(FAILED(m_device11->OpenSharedResource1(hResource, IID_PPV_ARGS(&m_result11))),
+			XUSG_M_RETURN(FAILED(m_device11->OpenSharedResource1(hResource, IID_PPV_ARGS(&m_result11))),
 				cerr, "Failed to open shared Result on DX11.", false);
 		}
 	}
