@@ -68,7 +68,7 @@ void AmpDX12Interop::LoadPipeline(vector<Resource::uptr>& uploaders, Texture::sp
 	}
 #endif
 
-	com_ptr<IDXGIFactory4> factory;
+	com_ptr<IDXGIFactory5> factory;
 	ThrowIfFailed(CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(&factory)));
 
 	DXGI_ADAPTER_DESC1 dxgiAdapterDesc;
@@ -148,7 +148,7 @@ void AmpDX12Interop::LoadPipeline(vector<Resource::uptr>& uploaders, Texture::sp
 	// Describe and create the swap chain.
 	m_swapChain = SwapChain::MakeUnique();
 	XUSG_N_RETURN(m_swapChain->Create(factory.get(), Win32Application::GetHwnd(), m_commandQueue.get(),
-		FrameCount, m_width, m_height, Format::R8G8B8A8_UNORM), ThrowIfFailed(E_FAIL));
+		FrameCount, m_width, m_height, Format::R8G8B8A8_UNORM, SwapChainFlag::ALLOW_TEARING), ThrowIfFailed(E_FAIL));
 
 	m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
 
@@ -212,7 +212,7 @@ void AmpDX12Interop::OnRender()
 	m_commandQueue->ExecuteCommandList(m_commandList.get());
 
 	// Present the frame.
-	XUSG_N_RETURN(m_swapChain->Present(0, 0), ThrowIfFailed(E_FAIL));
+	XUSG_N_RETURN(m_swapChain->Present(0, PresentFlag::ALLOW_TEARING), ThrowIfFailed(E_FAIL));
 
 	MoveToNextFrame();
 }
