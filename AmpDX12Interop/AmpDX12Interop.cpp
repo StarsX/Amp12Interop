@@ -111,15 +111,14 @@ void AmpDX12Interop::LoadPipeline(vector<Resource::uptr>& uploaders, Texture::sp
 		m_commandAllocators[m_frameIndex].get(), nullptr), ThrowIfFailed(E_FAIL));
 
 	// Create DX11on12 device
-	const auto pCommandQueue = reinterpret_cast<ID3D12CommandQueue*>(m_commandQueue->GetHandle());
+	const auto pCommandQueue = reinterpret_cast<IUnknown*>(m_commandQueue->GetHandle());
 	const uint32_t d3d11DeviceFlags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
 	com_ptr<ID3D11Device> device11;
 	if (m_useNativeDX11)
 		ThrowIfFailed(D3D11CreateDevice(dxgiAdapter.get(), D3D_DRIVER_TYPE_UNKNOWN, nullptr,
 			d3d11DeviceFlags, nullptr, 0, D3D11_SDK_VERSION, &device11, nullptr, nullptr));
 	else ThrowIfFailed(D3D11On12CreateDevice(static_cast<ID3D12Device*>(m_device->GetHandle()),
-			d3d11DeviceFlags, nullptr, 0, reinterpret_cast<IUnknown* const*>(&pCommandQueue),
-			1, 0, &device11, nullptr, nullptr));
+			d3d11DeviceFlags, nullptr, 0, &pCommandQueue, 1, 0, &device11, nullptr, nullptr));
 
 	// Create AMP accelerator view
 	const auto ampAcceleratorView = create_accelerator_view(device11.get());
@@ -147,7 +146,7 @@ void AmpDX12Interop::LoadPipeline(vector<Resource::uptr>& uploaders, Texture::sp
 
 	// Describe and create the swap chain.
 	m_swapChain = SwapChain::MakeUnique();
-	XUSG_N_RETURN(m_swapChain->Create(factory.get(), Win32Application::GetHwnd(), m_commandQueue.get(),
+	XUSG_N_RETURN(m_swapChain->Create(factory.get(), Win32Application::GetHwnd(), pCommandQueue,
 		FrameCount, m_width, m_height, Format::R8G8B8A8_UNORM, SwapChainFlag::ALLOW_TEARING), ThrowIfFailed(E_FAIL));
 
 	m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
