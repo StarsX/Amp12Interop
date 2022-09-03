@@ -2,6 +2,7 @@
 // Copyright (c) XU, Tianchen. All rights reserved.
 //--------------------------------------------------------------------------------------
 
+#include "DXFrameworkHelper.h"
 #include "Amp12.h"
 #include "AmpVecMath.h"
 #define _INDEPENDENT_DDS_LOADER_
