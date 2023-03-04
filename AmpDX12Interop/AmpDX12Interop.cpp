@@ -248,17 +248,17 @@ void AmpDX12Interop::ParseCommandLineArgs(wchar_t* argv[], int argc)
 
 	for (auto i = 1; i < argc; ++i)
 	{
-		if (_wcsnicmp(argv[i], L"-image", wcslen(argv[i])) == 0 ||
-			_wcsnicmp(argv[i], L"/image", wcslen(argv[i])) == 0 ||
-			_wcsnicmp(argv[i], L"-i", wcslen(argv[i])) == 0 ||
-			_wcsnicmp(argv[i], L"/i", wcslen(argv[i])) == 0)
+		if (wcsncmp(argv[i], L"-image", wcslen(argv[i])) == 0 ||
+			wcsncmp(argv[i], L"/image", wcslen(argv[i])) == 0 ||
+			wcsncmp(argv[i], L"-i", wcslen(argv[i])) == 0 ||
+			wcsncmp(argv[i], L"/i", wcslen(argv[i])) == 0)
 		{
-			if (i + 1 < argc) m_fileName = argv[i + 1];
+			if (i + 1 < argc) m_fileName = argv[++i];
 		}
-		else if(_wcsnicmp(argv[i], L"-native", wcslen(argv[i])) == 0 ||
-			_wcsnicmp(argv[i], L"/native", wcslen(argv[i])) == 0 ||
-			_wcsnicmp(argv[i], L"-n", wcslen(argv[i])) == 0 ||
-			_wcsnicmp(argv[i], L"/n", wcslen(argv[i])) == 0)
+		else if(wcsncmp(argv[i], L"-native", wcslen(argv[i])) == 0 ||
+			wcsncmp(argv[i], L"/native", wcslen(argv[i])) == 0 ||
+			wcsncmp(argv[i], L"-n", wcslen(argv[i])) == 0 ||
+			wcsncmp(argv[i], L"/n", wcslen(argv[i])) == 0)
 		{
 			m_useNativeDX11 = true;
 		}
