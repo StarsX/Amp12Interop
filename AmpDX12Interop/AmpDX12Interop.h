@@ -67,11 +67,17 @@ private:
 	std::wstring m_fileName;
 	bool m_useNativeDX11;
 
+	// Screen-shot helpers and state
+	XUSG::Buffer::uptr	m_readBuffer;
+	uint32_t			m_rowPitch;
+	uint8_t				m_screenShot;
+
 	void LoadPipeline(std::vector<XUSG::Resource::uptr>& uploaders, XUSG::Texture::sptr& srcForNative11);
 	void LoadAssets();
-
 	void PopulateCommandList();
 	void WaitForGpu();
 	void MoveToNextFrame();
+	void SaveImage(char const* fileName, XUSG::Buffer* pImageBuffer,
+		uint32_t w, uint32_t h, uint32_t rowPitch, uint8_t comp = 3);
 	double CalculateFrameStats(float* fTimeStep = nullptr);
 };

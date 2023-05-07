@@ -10,17 +10,21 @@
 //*********************************************************
 
 #include "AmpDX12Interop.h"
+#include "stb_image_write.h"
 
 using namespace std;
 using namespace Concurrency::direct3d;
 using namespace XUSG;
+
+const auto backBufferFormat = Format::R8G8B8A8_UNORM;
 
 AmpDX12Interop::AmpDX12Interop(uint32_t width, uint32_t height, wstring name) :
 	DXFramework(width, height, name),
 	m_frameIndex(0),
 	m_showFPS(true),
 	m_fileName(L"Assets/Sashimi.dds"),
-	m_useNativeDX11(false)
+	m_useNativeDX11(false),
+	m_screenShot(0)
 {
 #if defined (_DEBUG)
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
@@ -126,7 +130,7 @@ void AmpDX12Interop::LoadPipeline(vector<Resource::uptr>& uploaders, Texture::sp
 	m_amp12 = make_unique<Amp12>(ampAcceleratorView);
 	if (!m_amp12) ThrowIfFailed(E_FAIL);
 
-	if (!m_amp12->Init(pCommandList, uploaders, Format::R8G8B8A8_UNORM,
+	if (!m_amp12->Init(pCommandList, uploaders, backBufferFormat,
 		m_fileName.c_str(), m_useNativeDX11 ? &srcForNative11 : nullptr))
 		ThrowIfFailed(E_FAIL);
 	
@@ -147,7 +151,7 @@ void AmpDX12Interop::LoadPipeline(vector<Resource::uptr>& uploaders, Texture::sp
 	// Describe and create the swap chain.
 	m_swapChain = SwapChain::MakeUnique();
 	XUSG_N_RETURN(m_swapChain->Create(factory.get(), Win32Application::GetHwnd(), pCommandQueue,
-		FrameCount, m_width, m_height, Format::R8G8B8A8_UNORM, SwapChainFlag::ALLOW_TEARING), ThrowIfFailed(E_FAIL));
+		FrameCount, m_width, m_height, backBufferFormat, SwapChainFlag::ALLOW_TEARING), ThrowIfFailed(E_FAIL));
 
 	m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
 
@@ -236,6 +240,9 @@ void AmpDX12Interop::OnKeyUp(uint8_t key)
 	case VK_F1:
 		m_showFPS = !m_showFPS;
 		break;
+	case VK_F11:
+		m_screenShot = 1;
+		break;
 	case VK_ESCAPE:
 		PostQuitMessage(0);
 		break;
@@ -281,13 +288,22 @@ void AmpDX12Interop::PopulateCommandList()
 
 	// Record commands.
 	ResourceBarrier barrier;
-	auto numBarriers = m_renderTargets[m_frameIndex]->SetBarrier(&barrier, ResourceState::COPY_DEST);
+	const auto pRenderTarget = m_renderTargets[m_frameIndex].get();
+	auto numBarriers = pRenderTarget->SetBarrier(&barrier, ResourceState::COPY_DEST);
 	pCommandList->Barrier(numBarriers, &barrier);
 
-	pCommandList->CopyResource(m_renderTargets[m_frameIndex].get(), m_amp12->GetResult());
+	pCommandList->CopyResource(pRenderTarget, m_amp12->GetResult());
 
-	numBarriers = m_renderTargets[m_frameIndex]->SetBarrier(&barrier, ResourceState::PRESENT);
+	numBarriers = pRenderTarget->SetBarrier(&barrier, ResourceState::PRESENT);
 	pCommandList->Barrier(numBarriers, &barrier);
+
+	// Screen-shot helper
+	if (m_screenShot == 1)
+	{
+		if (!m_readBuffer) m_readBuffer = Buffer::MakeUnique();
+		pRenderTarget->ReadBack(pCommandList, m_readBuffer.get(), &m_rowPitch);
+		m_screenShot = 2;
+	}
 
 	XUSG_N_RETURN(pCommandList->Close(), ThrowIfFailed(E_FAIL));
 }
@@ -325,6 +341,43 @@ void AmpDX12Interop::MoveToNextFrame()
 
 	// Set the fence value for the next frame.
 	m_fenceValues[m_frameIndex] = currentFenceValue + 1;
+
+	// Screen-shot helper
+	if (m_screenShot)
+	{
+		if (m_screenShot > FrameCount)
+		{
+			char timeStr[15];
+			tm dateTime;
+			const auto now = time(nullptr);
+			if (!localtime_s(&dateTime, &now) && strftime(timeStr, sizeof(timeStr), "%Y%m%d%H%M%S", &dateTime))
+				SaveImage((string("AmpDX12Interop_") + timeStr + ".png").c_str(), m_readBuffer.get(), m_width, m_height, m_rowPitch);
+			m_screenShot = 0;
+		}
+		else ++m_screenShot;
+	}
+}
+
+void AmpDX12Interop::SaveImage(char const* fileName, Buffer* pImageBuffer, uint32_t w, uint32_t h, uint32_t rowPitch, uint8_t comp)
+{
+	assert(comp == 3 || comp == 4);
+	const auto pData = static_cast<const uint8_t*>(pImageBuffer->Map(nullptr));
+
+	//stbi_write_png_compression_level = 1024;
+	vector<uint8_t> imageData(comp * w * h);
+	const auto sw = rowPitch / 4; // Byte to pixel
+	for (auto i = 0u; i < h; ++i)
+		for (auto j = 0u; j < w; ++j)
+		{
+			const auto s = sw * i + j;
+			const auto d = w * i + j;
+			for (uint8_t k = 0; k < comp; ++k)
+				imageData[comp * d + k] = pData[4 * s + k];
+		}
+
+	stbi_write_png(fileName, w, h, comp, imageData.data(), 0);
+
+	pImageBuffer->Unmap();
 }
 
 double AmpDX12Interop::CalculateFrameStats(float* pTimeStep)
@@ -349,6 +402,8 @@ double AmpDX12Interop::CalculateFrameStats(float* pTimeStep)
 		windowText << L"    fps: ";
 		if (m_showFPS) windowText << setprecision(2) << fixed << fps;
 		else windowText << L"[F1]";
+
+		windowText << L"    [F11] screen shot";
 
 		SetCustomWindowText(windowText.str().c_str());
 	}
