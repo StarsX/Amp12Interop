@@ -72,7 +72,7 @@ private:
 	bool		m_isPaused;
 
 	// User external settings
-	std::wstring m_fileName;
+	std::string m_fileName;
 	bool m_useNativeDX11;
 
 	// Screen-shot helpers and state
@@ -80,7 +80,7 @@ private:
 	uint32_t			m_rowPitch;
 	uint8_t				m_screenShot;
 
-	void LoadPipeline(std::vector<XUSG::Resource::uptr>& uploaders, XUSG::Texture::sptr& srcForNative11);
+	void LoadPipeline(std::vector<XUSG::Resource::uptr>& uploaders, XUSG::Texture::uptr& srcForNative11);
 	void LoadAssets();
 	void PopulateCommandList();
 	void WaitForGpu();

@@ -5,9 +5,10 @@
 #include "DXFrameworkHelper.h"
 #include "Amp12.h"
 #include "AmpVecMath.h"
-#define _INDEPENDENT_DDS_LOADER_
-#include "Advanced/XUSGDDSLoader.h"
-#undef _INDEPENDENT_DDS_LOADER_
+
+#define _ENABLE_STB_IMAGE_LOADER_ONLY_
+#define STB_IMAGE_IMPLEMENTATION
+#include "Advanced/XUSGTextureLoader.h"
 
 using namespace std;
 using namespace Concurrency;
@@ -32,22 +33,17 @@ Amp12::~Amp12()
 }
 
 bool Amp12::Init(CommandList* pCommandList,  vector<Resource::uptr>& uploaders,
-	Format rtFormat, const wchar_t* fileName, Texture::sptr* pSrcForNative11)
+	Format rtFormat, const char* fileName, Texture::uptr* pSrcForNative11)
 {
 	const auto pDevice = pCommandList->GetDevice();
 	m_useNativeDX11 = pSrcForNative11 ? true : false;
 	auto& source = pSrcForNative11 ? *pSrcForNative11 : m_source;
 
 	// Load input image
-	{
-		DDS::Loader textureLoader;
-		DDS::AlphaMode alphaMode;
-
-		uploaders.emplace_back(Resource::MakeUnique());
-		XUSG_N_RETURN(textureLoader.CreateTextureFromFile(pCommandList, fileName, 8192,
-			false, source, uploaders.back().get(), &alphaMode, ResourceState::COMMON,
-			MemoryFlag::SHARED), false);
-	}
+	source = Texture::MakeUnique();
+	uploaders.emplace_back(Resource::MakeUnique());
+	XUSG_N_RETURN(CreateTextureFromFile(pCommandList, fileName, source.get(),
+		uploaders.back().get(), ResourceState::COMMON, MemoryFlag::SHARED, L"Source"), false);
 
 	// Create resources
 	m_imageSize.x = static_cast<uint32_t>(source->GetWidth());
@@ -85,8 +81,8 @@ bool Amp12::Init(CommandList* pCommandList,  vector<Resource::uptr>& uploaders,
 			com_ptr<ID3D12Resource> resource12;
 			XUSG_M_RETURN(FAILED(pDevice12->OpenSharedHandle(hResource, IID_PPV_ARGS(&resource12))),
 				cerr, "Failed to open shared Source on DX12.", false);
-			m_source = Texture::MakeShared();
-			static_pointer_cast<Resource, Texture>(m_source)->Create(pDevice12, resource12.get());
+			m_source = Texture::MakeUnique();
+			m_source->Create(pDevice12, resource12.get());
 		}
 
 		// Share the DX12 resource to DX11

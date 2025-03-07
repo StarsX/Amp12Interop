@@ -13,7 +13,7 @@ public:
 	virtual ~Amp12();
 
 	bool Init(XUSG::CommandList* pCommandList, std::vector<XUSG::Resource::uptr>& uploaders,
-		XUSG::Format rtFormat, const wchar_t* fileName, XUSG::Texture::sptr* pSrcForNative11);
+		XUSG::Format rtFormat, const char* fileName, XUSG::Texture::uptr* pSrcForNative11);
 
 	void Process();
 
@@ -24,7 +24,7 @@ public:
 protected:
 	Concurrency::accelerator_view m_acceleratorView;
 
-	XUSG::Texture::sptr				m_source;
+	XUSG::Texture::uptr				m_source;
 	XUSG::Texture2D::uptr			m_result;
 
 	XUSG::com_ptr<ID3D11Device1>	m_device11;

@@ -23,7 +23,7 @@ AmpDX12Interop::AmpDX12Interop(uint32_t width, uint32_t height, wstring name) :
 	m_frameIndex(0),
 	m_deviceType(DEVICE_DISCRETE),
 	m_showFPS(true),
-	m_fileName(L"Assets/Sashimi.dds"),
+	m_fileName("Assets/Sashimi.png"),
 	m_useNativeDX11(false),
 	m_screenShot(0)
 {
@@ -47,13 +47,13 @@ AmpDX12Interop::~AmpDX12Interop()
 void AmpDX12Interop::OnInit()
 {
 	vector<Resource::uptr> uploaders(0);
-	Texture::sptr srcForNative11;
+	Texture::uptr srcForNative11;
 	LoadPipeline(uploaders, srcForNative11);
 	LoadAssets();
 }
 
 // Load the rendering pipeline dependencies.
-void AmpDX12Interop::LoadPipeline(vector<Resource::uptr>& uploaders, Texture::sptr& srcForNative11)
+void AmpDX12Interop::LoadPipeline(vector<Resource::uptr>& uploaders, Texture::uptr& srcForNative11)
 {
 	auto dxgiFactoryFlags = 0u;
 
@@ -309,7 +309,12 @@ void AmpDX12Interop::ParseCommandLineArgs(wchar_t* argv[], int argc)
 		else if (isArgMatched(i, L"uma")) m_deviceType = DEVICE_UMA;
 		else if (isArgMatched(i, L"i") || isArgMatched(i, L"image"))
 		{
-			if (hasNextArgValue(i)) m_fileName = argv[++i];
+			if (hasNextArgValue(i))
+			{
+				m_fileName.resize(wcslen(argv[++i]));
+				for (size_t j = 0; j < m_fileName.size(); ++j)
+					m_fileName[j] = static_cast<char>(argv[i][j]);
+			}
 		}
 		else if (isArgMatched(i, L"n") || isArgMatched(i, L"native")) m_useNativeDX11 = true;
 	}
