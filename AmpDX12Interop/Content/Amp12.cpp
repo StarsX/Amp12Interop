@@ -7,7 +7,6 @@
 #include "AmpVecMath.h"
 
 #define _ENABLE_STB_IMAGE_LOADER_ONLY_
-#define STB_IMAGE_IMPLEMENTATION
 #include "Advanced/XUSGTextureLoader.h"
 
 using namespace std;

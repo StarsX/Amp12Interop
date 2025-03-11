@@ -95,5 +95,8 @@
     <ClCompile Include="Common\stb_image_write.cpp">
       <Filter>Common\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Common\stb_image.cpp">
+      <Filter>Common\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
